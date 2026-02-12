@@ -1,3 +1,4 @@
+import 'package:blabla/ui/screens/ride_pref/widgets/ride_location_picker.dart';
 import 'package:blabla/ui/screens/ride_pref/widgets/ride_pref_input.dart';
 import 'package:blabla/ui/widgets/actions/bla_button.dart';
 import 'package:blabla/utils/date_time_utils.dart';
@@ -55,7 +56,10 @@ class _RidePrefFormState extends State<RidePrefForm> {
   // Handle events
   // ----------------------------------
   void onClick() {}
-  void onSearch() {}
+
+  void onSearch() async {
+    Location? searchLocation = await Navigator.push(context, MaterialPageRoute(builder: (_) => const RideLocationPicker()));
+  }
 
   //function to handle switches location
   void onLocationSwtiches() {
