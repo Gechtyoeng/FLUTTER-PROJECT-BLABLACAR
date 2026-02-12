@@ -1,3 +1,6 @@
+import 'package:blabla/ui/screens/ride_pref/widgets/ride_pref_input.dart';
+import 'package:blabla/ui/widgets/actions/bla_button.dart';
+import 'package:blabla/utils/date_time_utils.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../model/ride/locations.dart';
@@ -35,27 +38,72 @@ class _RidePrefFormState extends State<RidePrefForm> {
   @override
   void initState() {
     super.initState();
-    // TODO
+    //Fetch the ride prefef data if it is not null
+    if (widget.initRidePref != null) {
+      departure = widget.initRidePref!.departure;
+      arrival = widget.initRidePref!.arrival;
+      requestedSeats = widget.initRidePref!.requestedSeats;
+      departureDate = widget.initRidePref!.departureDate;
+    } else {
+      // initailize the departure date = current date and requested seat to 1
+      departureDate = DateTime.now();
+      requestedSeats = 1;
+    }
   }
 
   // ----------------------------------
   // Handle events
   // ----------------------------------
+  void onClick() {}
+  void onSearch() {}
+
+  //function to handle switches location
+  void onLocationSwtiches() {
+    if (departure == null || arrival == null) return;
+
+    setState(() {
+      final temp = departure;
+      departure = arrival;
+      arrival = temp;
+    });
+  }
 
   // ----------------------------------
   // Compute the widgets rendering
   // ----------------------------------
+  String get date => DateTimeUtils.formatDateTime(departureDate); //get the date format
+  String get departureText => departure?.name ?? "Living from";
+  String get arrivalText => arrival?.name ?? "Going to";
+
+  IconData get locationIcon => departure == null || arrival == null ? Icons.location_on : Icons.circle_outlined;
+  bool get isEnableSwitchIcon => departure == null || arrival == null;
 
   // ----------------------------------
   // Build the widgets
   // ----------------------------------
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [ 
-        
-        ]);
+    return Padding(
+      padding: EdgeInsetsGeometry.all(10),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          RidePrefInput(
+            title: departureText,
+            leftIcon: locationIcon,
+            onclick: onClick,
+            rightIcon: isEnableSwitchIcon ? Icons.swap_vert : null,
+            onRightIconClick: onLocationSwtiches,
+          ), // departure location
+          RidePrefInput(title: arrivalText, leftIcon: locationIcon, onclick: onClick), // arrival location
+          RidePrefInput(title: date, leftIcon: Icons.date_range, onclick: onClick), // date selection
+          RidePrefInput(title: requestedSeats.toString(), leftIcon: Icons.person, onclick: onClick), //seat selection
+
+          BlaButton(title: "Search", onClick: onSearch),
+        ],
+      ),
+    );
   }
 }
