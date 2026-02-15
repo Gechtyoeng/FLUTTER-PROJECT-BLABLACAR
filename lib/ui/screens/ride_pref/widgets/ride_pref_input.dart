@@ -11,15 +11,20 @@ class RidePrefInput extends StatelessWidget {
   final VoidCallback onclick;
   final VoidCallback? onRightIconClick;
 
-  const RidePrefInput({super.key, required this.title, required this.leftIcon, required this.onclick, this.onRightIconClick, this.rightIcon});
+  // If true the text is displayed ligher
+  final bool isPlaceHolder;
+
+  const RidePrefInput({super.key, required this.title, required this.leftIcon, required this.onclick, this.onRightIconClick, this.rightIcon, this.isPlaceHolder = false});
 
   @override
   Widget build(BuildContext context) {
+    Color textColor = isPlaceHolder ? BlaColors.textLight : BlaColors.textNormal;
+
     return Column(
       children: [
         ListTile(
           leading: Icon(leftIcon, color: BlaColors.iconLight),
-          title: Text(title, style: BlaTextStyles.label.copyWith(color: BlaColors.neutral)),
+          title: Text(title, style: BlaTextStyles.button.copyWith(fontSize: 14, color: textColor)),
           onTap: onclick,
           trailing: rightIcon != null
               ? IconButton(
