@@ -1,13 +1,13 @@
-import 'package:blabla/ui/theme/theme.dart';
-import 'package:blabla/utils/date_time_utils.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../model/ride_pref/ride_pref.dart';
+import '../../../../utils/date_time_utils.dart';
+import '../../../theme/theme.dart';
 
-class RidePrefsTile extends StatelessWidget {
-  const RidePrefsTile({super.key, required this.ridePref, this.onPressed});
+class HomeHistoryTile extends StatelessWidget {
+  const HomeHistoryTile({super.key, required this.ridePref, this.onPressed});
 
-  final RidePref ridePref;
+  final RidePreference ridePref;
   final VoidCallback? onPressed;
 
   String get title => "${ridePref.departure.name} → ${ridePref.arrival.name}";
@@ -18,6 +18,7 @@ class RidePrefsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      onTap: onPressed,
       leading: Icon(Icons.history, color: BlaColors.iconLight),
 
       title: Text(title, style: BlaTextStyles.body),

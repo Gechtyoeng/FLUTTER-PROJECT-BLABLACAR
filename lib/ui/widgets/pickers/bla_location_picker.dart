@@ -1,22 +1,27 @@
-import 'package:blabla/model/ride/locations.dart';
-import 'package:blabla/ui/theme/theme.dart';
+import 'package:blabla/services/location_service.dart';
 import 'package:blabla/ui/widgets/display/bla_divider.dart';
 import 'package:flutter/material.dart';
-import 'package:blabla/services/location_service.dart';
 
+import '../../../model/ride/locations.dart';
+import '../../theme/theme.dart';
+
+///
+/// A  Location Picker is a view to pick a Location:
+///
 class BlaLocationPicker extends StatefulWidget {
-  final Location? searchLocation;
-  const BlaLocationPicker({super.key, this.searchLocation});
+  const BlaLocationPicker({super.key, required this.initLocation});
+
+  final Location? initLocation; // optional initial location
 
   @override
-  State<BlaLocationPicker> createState() => _RideLocationPickerState();
+  State<BlaLocationPicker> createState() => _BlaLocationPickerState();
 }
 
-class _RideLocationPickerState extends State<BlaLocationPicker> {
+class _BlaLocationPickerState extends State<BlaLocationPicker> {
   String currentSearchText = "";
 
   void onTap(Location location) {
-    Navigator.pop(context, location);
+    Navigator.pop<Location>(context, location);
   }
 
   void onBackTap() {
@@ -26,8 +31,12 @@ class _RideLocationPickerState extends State<BlaLocationPicker> {
   @override
   void initState() {
     super.initState();
-    if (widget.searchLocation != null) {
-      currentSearchText = widget.searchLocation!.name;
+
+    // Initilize the search bar if any initial location
+    if (widget.initLocation != null) {
+      setState(() {
+        currentSearchText = widget.initLocation!.name;
+      });
     }
   }
 
@@ -37,28 +46,45 @@ class _RideLocationPickerState extends State<BlaLocationPicker> {
     });
   }
 
-  //get filter locations
   List<Location> get filteredLocation {
-    if (currentSearchText.length <= 2) return [];
-    return LocationsService.availableLocations.where((location) => location.name.toLowerCase().contains(currentSearchText.toLowerCase())).toList();
+    if (currentSearchText.length < 2) {
+      return [];
+    }
+    return LocationsService.availableLocations
+        .where(
+          (location) => location.name.toUpperCase().contains(
+            currentSearchText.toUpperCase(),
+          ),
+        )
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.only(left: BlaSpacings.m, right: BlaSpacings.m, top: BlaSpacings.s),
+        padding: const EdgeInsets.only(
+          left: BlaSpacings.m,
+          right: BlaSpacings.m,
+          top: BlaSpacings.s,
+        ),
         child: Column(
           children: [
-            //SEARCH BAR
-            LocationSearchBar(searchText: currentSearchText, onBackTap: onBackTap, onSearchChanged: onSearchChanged),
-            const SizedBox(height: 20),
+            LocationSearchBar(
+              initSearch: currentSearchText,
+              onBackTap: onBackTap,
+              onSearchChanged: onSearchChanged,
+            ),
 
-            //SEARCH RESULT
+            SizedBox(height: 20),
+
             Expanded(
               child: ListView.builder(
                 itemCount: filteredLocation.length,
-                itemBuilder: (context, index) => LocationTile(location: filteredLocation[index], onTap: onTap),
+                itemBuilder: (context, index) => LocationTile(
+                  location: filteredLocation[index],
+                  onTap: onTap,
+                ),
               ),
             ),
           ],
@@ -68,12 +94,17 @@ class _RideLocationPickerState extends State<BlaLocationPicker> {
   }
 }
 
-//search bar widget
 class LocationSearchBar extends StatefulWidget {
-  final String searchText;
-  final ValueChanged<String> onSearchChanged;
+  const LocationSearchBar({
+    super.key,
+    required this.onBackTap,
+    required this.onSearchChanged,
+    required this.initSearch,
+  });
+
+  final String initSearch;
   final VoidCallback onBackTap;
-  const LocationSearchBar({super.key, required this.searchText, required this.onBackTap, required this.onSearchChanged});
+  final ValueChanged<String> onSearchChanged;
 
   @override
   State<LocationSearchBar> createState() => _LocationSearchBarState();
@@ -83,10 +114,16 @@ class _LocationSearchBarState extends State<LocationSearchBar> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
+  void onClearTap() {
+    setState(() {
+      _searchController.clear();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    _searchController.text = widget.searchText;
+    _searchController.text = widget.initSearch;
   }
 
   @override
@@ -96,24 +133,27 @@ class _LocationSearchBarState extends State<LocationSearchBar> {
     super.dispose();
   }
 
-  //clear the text in search bar
-  void onClear() {
-    _searchController.clear();
-  }
-
   bool get searchIsNotEmpty => _searchController.text.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: BlaColors.greyLight),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: BlaColors.greyLight,
+      ),
       child: Row(
         children: [
           // BACK ICON
           IconButton(
             onPressed: widget.onBackTap,
-            icon: Icon(Icons.arrow_back_ios, color: BlaColors.iconLight, size: 16),
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: BlaColors.iconLight,
+              size: 16,
+            ),
           ),
+
           // TEXT FILED
           Expanded(
             child: TextField(
@@ -128,10 +168,11 @@ class _LocationSearchBarState extends State<LocationSearchBar> {
               ),
             ),
           ),
+
           // CLOSE ICON
           searchIsNotEmpty
               ? IconButton(
-                  onPressed: onClear,
+                  onPressed: onClearTap,
                   icon: Icon(Icons.close, color: BlaColors.iconLight, size: 16),
                 )
               : SizedBox.shrink(), // Hides the icon if text field is empty
@@ -161,9 +202,16 @@ class LocationTile extends StatelessWidget {
           leading: Icon(Icons.history, color: BlaColors.iconLight),
 
           title: Text(title, style: BlaTextStyles.body),
-          subtitle: Text(subTitle, style: BlaTextStyles.label.copyWith(color: BlaColors.textLight)),
+          subtitle: Text(
+            subTitle,
+            style: BlaTextStyles.label.copyWith(color: BlaColors.textLight),
+          ),
 
-          trailing: Icon(Icons.arrow_forward_ios, color: BlaColors.iconLight, size: 16),
+          trailing: Icon(
+            Icons.arrow_forward_ios,
+            color: BlaColors.iconLight,
+            size: 16,
+          ),
         ),
         BlaDivider(),
       ],
