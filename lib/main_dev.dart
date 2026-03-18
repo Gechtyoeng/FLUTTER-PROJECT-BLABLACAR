@@ -5,6 +5,7 @@ import 'package:blabla/data/repositories/ride_preferences/ride_preference_reposi
 import 'package:blabla/data/repositories/rides/ride_repository.dart';
 import 'package:blabla/data/repositories/rides/ride_repository_mock.dart';
 import 'package:blabla/main_common.dart';
+import 'package:blabla/ui/states/ride_preference_state.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +22,8 @@ List<InheritedProvider> get devProviders {
     Provider<RideRepository>(create: (_) => rideRepository),
     //Inject ride preference repo
     Provider<RidePreferenceRepository>(create: (_) => ridePreferenceRepository),
+    //Inject ride preference state
+    ChangeNotifierProvider<RidePreferenceState>(create: (_) => RidePreferenceState(ridePreferenceRepository)),
   ];
 }
 
