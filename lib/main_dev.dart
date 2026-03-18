@@ -20,11 +20,10 @@ List<InheritedProvider> get devProviders {
     //Inject ride repo
     Provider<RideRepository>(create: (_) => rideRepository),
     //Inject ride preference repo
-    Provider<RidePreferenceRepository>(create: (_) => ridePreferenceRepository)
-
+    Provider<RidePreferenceRepository>(create: (_) => ridePreferenceRepository),
   ];
 }
+
 void main() {
   runApp(BlaBlaApp(providers: devProviders));
 }
-

@@ -1,6 +1,7 @@
-import 'package:blabla/services/location_service.dart';
+import 'package:blabla/data/repositories/locations/location_repository.dart';
 import 'package:blabla/ui/widgets/display/bla_divider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../model/ride/locations.dart';
 import '../../theme/theme.dart';
@@ -19,6 +20,10 @@ class BlaLocationPicker extends StatefulWidget {
 
 class _BlaLocationPickerState extends State<BlaLocationPicker> {
   String currentSearchText = "";
+  List<Location> locations = [];
+  bool isLoading = false;
+
+  late LocationRepository locationRepo; // read the repo latter
 
   void onTap(Location location) {
     Navigator.pop<Location>(context, location);
@@ -31,6 +36,7 @@ class _BlaLocationPickerState extends State<BlaLocationPicker> {
   @override
   void initState() {
     super.initState();
+    locationRepo = Provider.of<LocationRepository>(context, listen: false);
 
     // Initilize the search bar if any initial location
     if (widget.initLocation != null) {
@@ -46,46 +52,40 @@ class _BlaLocationPickerState extends State<BlaLocationPicker> {
     });
   }
 
-  List<Location> get filteredLocation {
-    if (currentSearchText.length < 2) {
-      return [];
+  //Filter locations
+  Future<void> _filterLocations(String search) async {
+    setState(() {
+      currentSearchText = search;
+      isLoading = true;
+    });
+
+    if (search.length < 2) {
+      locations = [];
+    } else {
+      locations = await locationRepo.filterLocation(search);
     }
-    return LocationsService.availableLocations
-        .where(
-          (location) => location.name.toUpperCase().contains(
-            currentSearchText.toUpperCase(),
-          ),
-        )
-        .toList();
+
+    setState(() => isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.only(
-          left: BlaSpacings.m,
-          right: BlaSpacings.m,
-          top: BlaSpacings.s,
-        ),
+        padding: const EdgeInsets.only(left: BlaSpacings.m, right: BlaSpacings.m, top: BlaSpacings.s),
         child: Column(
           children: [
-            LocationSearchBar(
-              initSearch: currentSearchText,
-              onBackTap: onBackTap,
-              onSearchChanged: onSearchChanged,
-            ),
+            LocationSearchBar(initSearch: currentSearchText, onBackTap: onBackTap, onSearchChanged: _filterLocations),
 
             SizedBox(height: 20),
 
             Expanded(
-              child: ListView.builder(
-                itemCount: filteredLocation.length,
-                itemBuilder: (context, index) => LocationTile(
-                  location: filteredLocation[index],
-                  onTap: onTap,
-                ),
-              ),
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: locations.length,
+                      itemBuilder: (context, index) => LocationTile(location: locations[index], onTap: onTap),
+                    ),
             ),
           ],
         ),
@@ -95,12 +95,7 @@ class _BlaLocationPickerState extends State<BlaLocationPicker> {
 }
 
 class LocationSearchBar extends StatefulWidget {
-  const LocationSearchBar({
-    super.key,
-    required this.onBackTap,
-    required this.onSearchChanged,
-    required this.initSearch,
-  });
+  const LocationSearchBar({super.key, required this.onBackTap, required this.onSearchChanged, required this.initSearch});
 
   final String initSearch;
   final VoidCallback onBackTap;
@@ -138,20 +133,13 @@ class _LocationSearchBarState extends State<LocationSearchBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: BlaColors.greyLight,
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: BlaColors.greyLight),
       child: Row(
         children: [
           // BACK ICON
           IconButton(
             onPressed: widget.onBackTap,
-            icon: Icon(
-              Icons.arrow_back_ios,
-              color: BlaColors.iconLight,
-              size: 16,
-            ),
+            icon: Icon(Icons.arrow_back_ios, color: BlaColors.iconLight, size: 16),
           ),
 
           // TEXT FILED
@@ -202,16 +190,9 @@ class LocationTile extends StatelessWidget {
           leading: Icon(Icons.history, color: BlaColors.iconLight),
 
           title: Text(title, style: BlaTextStyles.body),
-          subtitle: Text(
-            subTitle,
-            style: BlaTextStyles.label.copyWith(color: BlaColors.textLight),
-          ),
+          subtitle: Text(subTitle, style: BlaTextStyles.label.copyWith(color: BlaColors.textLight)),
 
-          trailing: Icon(
-            Icons.arrow_forward_ios,
-            color: BlaColors.iconLight,
-            size: 16,
-          ),
+          trailing: Icon(Icons.arrow_forward_ios, color: BlaColors.iconLight, size: 16),
         ),
         BlaDivider(),
       ],
