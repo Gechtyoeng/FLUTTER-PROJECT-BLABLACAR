@@ -1,7 +1,6 @@
 import 'package:blabla/model/ride_pref/ride_pref.dart';
 import 'package:blabla/ui/screens/home/home_view_model.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../../utils/animations_util.dart';
 import '../../../theme/theme.dart';
 import '../../../widgets/pickers/bla_ride_preference_picker.dart';
@@ -11,13 +10,14 @@ import '../widgets/home_history_tile.dart';
 const String blablaHomeImagePath = 'assets/images/blabla_home.png';
 
 class HomeContent extends StatelessWidget {
-  const HomeContent({super.key});
+  final HomeViewModel homeVM;
+  const HomeContent({super.key, required this.homeVM});
 
   void _onRidePrefSelected(BuildContext context, RidePreference selectedPreference) async {
-    final viewModel = Provider.of<HomeViewModel>(context, listen: false);
+    //final viewModel = Provider.of<HomeViewModel>(context, listen: false);
 
     // 1 - Update global state via view model
-    viewModel.onRidePreferenceSearch(selectedPreference);
+    homeVM.onRidePreferenceSearch(selectedPreference);
 
     // 2 - Navigate to the rides screen
     await Navigator.of(context).push(AnimationUtils.createBottomToTopRoute(RidesSelectionScreen()));
@@ -49,10 +49,8 @@ class HomeContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // 2 - THE FORM
-              Consumer<HomeViewModel>(
-                builder: (context, viewModel, _) =>
-                    BlaRidePreferencePicker(initRidePreference: viewModel.currentRide, onRidePreferenceSelected: (ride) => _onRidePrefSelected(context, ride)),
-              ),
+              BlaRidePreferencePicker(initRidePreference: homeVM.currentRide, onRidePreferenceSelected: (ride) => _onRidePrefSelected(context, ride)),
+
               SizedBox(height: BlaSpacings.m),
               _buildHistory(context),
             ],
@@ -63,20 +61,16 @@ class HomeContent extends StatelessWidget {
   }
 
   Widget _buildHistory(BuildContext context) {
-    return Consumer<HomeViewModel>(
-      builder: (context, viewModel, _) {
-        final history = viewModel.ridePreference.reversed.toList();
+    final history = homeVM.ridePreference.toList();
 
-        return SizedBox(
-          height: 200,
-          child: ListView.builder(
-            shrinkWrap: true,
-            physics: const AlwaysScrollableScrollPhysics(),
-            itemCount: history.length,
-            itemBuilder: (ctx, index) => HomeHistoryTile(ridePref: history[index], onPressed: () => _onRidePrefSelected(context, history[index])),
-          ),
-        );
-      },
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: history.length,
+        itemBuilder: (ctx, index) => HomeHistoryTile(ridePref: history[index], onPressed: () => _onRidePrefSelected(context, history[index])),
+      ),
     );
   }
 
